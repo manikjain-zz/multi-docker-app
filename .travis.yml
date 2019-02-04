@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t manikjain/react-test -f ./client/Dockerfile.dev ./client/
+
+script:
+  - docker run manikjain/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t manikjain/multi-client ./client
+  - docker build -t manikjain/multi-nginx ./nginx
+  - docker build -t manikjain/multi-server ./server
+  - docker build -t manikjain/multi-worker ./worker
+  # Login to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin 
+  # Push these images to docker hub
+  - docker push manikjain/multi-client 
+  - docker push manikjain/multi-nginx
+  - docker push manikjain/multi-server
+  - docker push manikjain/multi-worker
